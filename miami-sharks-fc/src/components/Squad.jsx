@@ -16,6 +16,38 @@ const SQUAD = [
   { number: 11, name: "Msanii",  position: "Forward",    role: "LW" },
 ];
 
+const STAFF = [
+  {
+    name: "Lameck",
+    role: "Head Coach",
+    initials: "LA",
+    description: "Leading the Sharks from the touchline — tactics, discipline, and vision.",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+      </svg>
+    ),
+    accent: "#CC0000",
+    accentBg: "#2a0000",
+    badge: "HC",
+  },
+  {
+    name: "Amos",
+    role: "Assistant Coach",
+    initials: "AM",
+    description: "Supporting the first team with training sessions, analysis, and player development.",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="8" r="4"/>
+        <path d="M4 20c0-4 3.58-7 8-7s8 3 8 7"/>
+      </svg>
+    ),
+    accent: "#0047FF",
+    accentBg: "#00102a",
+    badge: "AC",
+  },
+];
+
 const POSITION_COLORS = {
   Goalkeeper: { bg: "#fff0f0", border: "#CC0000", text: "#880000", dot: "#CC0000" },
   Defender:   { bg: "#1a1a1a", border: "#444444", text: "#cccccc", dot: "#888888" },
@@ -57,10 +89,7 @@ function PlayerCard({ player, index, visible }) {
       }}
       aria-label={`${player.name}, ${player.position}, number ${player.number}`}
     >
-      {/* Jersey number badge */}
       <div className="player-number">{player.number}</div>
-
-      {/* Avatar */}
       <div
         className="player-avatar"
         style={{
@@ -71,13 +100,9 @@ function PlayerCard({ player, index, visible }) {
       >
         {initials}
       </div>
-
-      {/* Info */}
       <div className="player-name" style={{ opacity: isPlaceholder ? 0.35 : 1 }}>
         {player.name}
       </div>
-
-      {/* Position pill */}
       <div
         className="player-pos-pill"
         style={{
@@ -86,12 +111,55 @@ function PlayerCard({ player, index, visible }) {
           color: colors.text,
         }}
       >
-        <span
-          className="pos-dot"
-          style={{ background: colors.dot }}
-          aria-hidden="true"
-        />
+        <span className="pos-dot" style={{ background: colors.dot }} aria-hidden="true" />
         {player.role} · {player.position}
+      </div>
+    </div>
+  );
+}
+
+function StaffCard({ member, index, visible }) {
+  return (
+    <div
+      className="staff-card"
+      style={{
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translateY(0)" : "translateY(22px)",
+        transitionDelay: `${index * 0.12}s`,
+        borderColor: visible ? member.accent + "33" : "rgba(255,255,255,0.08)",
+      }}
+      aria-label={`${member.name}, ${member.role}`}
+    >
+      {/* Top accent bar */}
+      <div className="staff-accent-bar" style={{ background: member.accent }} />
+
+      <div className="staff-card-inner">
+        {/* Avatar */}
+        <div
+          className="staff-avatar"
+          style={{
+            background: member.accentBg,
+            border: `2px solid ${member.accent}`,
+            color: member.accent,
+          }}
+        >
+          {member.initials}
+        </div>
+
+        {/* Info */}
+        <div className="staff-info">
+          <div className="staff-badge-row">
+            <span
+              className="staff-badge"
+              style={{ background: member.accent + "22", color: member.accent, border: `0.5px solid ${member.accent}55` }}
+            >
+              {member.badge}
+            </span>
+            <span className="staff-role" style={{ color: member.accent }}>{member.role}</span>
+          </div>
+          <div className="staff-name">{member.name}</div>
+          <p className="staff-desc">{member.description}</p>
+        </div>
       </div>
     </div>
   );
@@ -101,6 +169,7 @@ export default function Squad() {
   const [activeFilter, setActiveFilter] = useState("All");
   const [headerRef, headerInView] = useInView(0.1);
   const [gridRef, gridInView] = useInView(0.05);
+  const [staffRef, staffInView] = useInView(0.1);
 
   const filtered =
     activeFilter === "All"
@@ -117,7 +186,6 @@ export default function Squad() {
           padding: 6rem 1.5rem;
           font-family: 'DM Sans', sans-serif;
         }
-
         .squad-inner {
           max-width: 900px;
           margin: 0 auto;
@@ -135,11 +203,7 @@ export default function Squad() {
           transform: translateY(20px);
           transition: opacity 0.6s ease, transform 0.6s ease;
         }
-        .squad-header.visible {
-          opacity: 1;
-          transform: translateY(0);
-        }
-        .squad-header-left {}
+        .squad-header.visible { opacity: 1; transform: translateY(0); }
         .squad-tag {
           font-size: 11px;
           font-weight: 500;
@@ -161,17 +225,10 @@ export default function Squad() {
           color: rgba(255,255,255,0.35);
           font-weight: 300;
         }
-        .squad-count span {
-          color: #0047FF;
-          font-weight: 500;
-        }
+        .squad-count span { color: #0047FF; font-weight: 500; }
 
         /* Filters */
-        .squad-filters {
-          display: flex;
-          gap: 8px;
-          flex-wrap: wrap;
-        }
+        .squad-filters { display: flex; gap: 8px; flex-wrap: wrap; }
         .filter-btn {
           background: rgba(255,255,255,0.06);
           border: 0.5px solid rgba(255,255,255,0.12);
@@ -185,36 +242,27 @@ export default function Squad() {
           letter-spacing: 0.3px;
           transition: background 0.2s, color 0.2s, border-color 0.2s;
         }
-        .filter-btn:hover {
-          background: rgba(255,255,255,0.1);
-          color: rgba(255,255,255,0.85);
-        }
-        .filter-btn.active {
-          background: #CC0000;
-          border-color: #CC0000;
-          color: #ffffff;
-        }
+        .filter-btn:hover { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.85); }
+        .filter-btn.active { background: #CC0000; border-color: #CC0000; color: #ffffff; }
 
         /* Divider */
         .squad-divider {
-          width: 36px;
-          height: 2px;
-          background: #0047FF;
-          border-radius: 2px;
+          width: 36px; height: 2px;
+          background: #0047FF; border-radius: 2px;
           margin-bottom: 2.5rem;
           opacity: 0;
           transition: opacity 0.4s 0.2s ease;
         }
         .squad-divider.visible { opacity: 1; }
 
-        /* Grid */
+        /* Player Grid */
         .squad-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
           gap: 14px;
         }
 
-        /* Card */
+        /* Player Card */
         .player-card {
           background: rgba(255,255,255,0.04);
           border: 0.5px solid rgba(255,255,255,0.09);
@@ -230,95 +278,131 @@ export default function Squad() {
           background: rgba(255,255,255,0.07);
           border-color: rgba(93,202,165,0.3);
         }
-
         .player-number {
-          position: absolute;
-          top: 10px;
-          right: 12px;
+          position: absolute; top: 10px; right: 12px;
           font-family: 'Bebas Neue', sans-serif;
-          font-size: 15px;
-          letter-spacing: 0.5px;
+          font-size: 15px; letter-spacing: 0.5px;
           color: rgba(255,255,255,0.2);
         }
-
         .player-avatar {
-          width: 56px;
-          height: 56px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+          width: 56px; height: 56px; border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
           margin: 0 auto 12px;
           font-family: 'Bebas Neue', sans-serif;
-          font-size: 18px;
-          letter-spacing: 1px;
+          font-size: 18px; letter-spacing: 1px;
         }
-
         .player-name {
-          font-size: 13.5px;
-          font-weight: 500;
-          color: #ffffff;
-          margin-bottom: 8px;
-          line-height: 1.3;
-          min-height: 18px;
+          font-size: 13.5px; font-weight: 500;
+          color: #ffffff; margin-bottom: 8px;
+          line-height: 1.3; min-height: 18px;
+        }
+        .player-pos-pill {
+          display: inline-flex; align-items: center; gap: 5px;
+          padding: 4px 10px; border-radius: 12px;
+          font-size: 11px; font-weight: 500; letter-spacing: 0.2px;
+        }
+        .pos-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+
+        /* ── Coaching Staff ── */
+        .staff-section-header {
+          margin-top: 3.5rem;
+          margin-bottom: 1.5rem;
+          opacity: 0;
+          transform: translateY(16px);
+          transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .staff-section-header.visible { opacity: 1; transform: translateY(0); }
+        .staff-section-label {
+          font-size: 11px; font-weight: 500;
+          text-transform: uppercase; letter-spacing: 2.5px;
+          color: #CC0000; margin-bottom: 0.4rem;
+        }
+        .staff-section-title {
+          font-family: 'Bebas Neue', sans-serif;
+          font-size: clamp(24px, 4vw, 34px);
+          letter-spacing: 2px; color: #ffffff; line-height: 1;
+        }
+        .staff-divider {
+          width: 36px; height: 2px;
+          background: #CC0000; border-radius: 2px;
+          margin-top: 0.75rem;
         }
 
-        .player-pos-pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 5px;
-          padding: 4px 10px;
-          border-radius: 12px;
-          font-size: 11px;
-          font-weight: 500;
-          letter-spacing: 0.2px;
+        .staff-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 16px;
         }
-        .pos-dot {
-          width: 5px;
-          height: 5px;
-          border-radius: 50%;
-          flex-shrink: 0;
+
+        .staff-card {
+          background: rgba(255,255,255,0.04);
+          border: 0.5px solid rgba(255,255,255,0.08);
+          border-radius: 16px;
+          overflow: hidden;
+          position: relative;
+          transition: opacity 0.5s ease, transform 0.5s ease,
+                      background 0.2s, border-color 0.3s;
+          cursor: default;
+        }
+        .staff-card:hover { background: rgba(255,255,255,0.06); }
+
+        .staff-accent-bar { height: 3px; width: 100%; }
+
+        .staff-card-inner {
+          display: flex; align-items: flex-start;
+          gap: 1.1rem; padding: 1.4rem 1.4rem 1.5rem;
+        }
+
+        .staff-avatar {
+          width: 58px; height: 58px; border-radius: 50%; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+          font-family: 'Bebas Neue', sans-serif;
+          font-size: 19px; letter-spacing: 1px;
+        }
+
+        .staff-info { flex: 1; min-width: 0; }
+
+        .staff-badge-row {
+          display: flex; align-items: center; gap: 8px;
+          margin-bottom: 4px;
+        }
+        .staff-badge {
+          font-size: 10px; font-weight: 600; letter-spacing: 1px;
+          padding: 2px 7px; border-radius: 5px;
+          font-family: 'Bebas Neue', sans-serif;
+        }
+        .staff-role {
+          font-size: 11px; font-weight: 500;
+          text-transform: uppercase; letter-spacing: 1.5px;
+        }
+        .staff-name {
+          font-family: 'Bebas Neue', sans-serif;
+          font-size: 22px; letter-spacing: 1.5px;
+          color: #ffffff; line-height: 1.1;
+          margin-bottom: 6px;
+        }
+        .staff-desc {
+          font-size: 12.5px; color: rgba(255,255,255,0.38);
+          font-weight: 300; line-height: 1.65; margin: 0;
         }
 
         /* Legend */
         .squad-legend {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 1rem;
-          margin-top: 2.5rem;
-          padding-top: 2rem;
+          display: flex; flex-wrap: wrap; gap: 1rem;
+          margin-top: 2.5rem; padding-top: 2rem;
           border-top: 0.5px solid rgba(255,255,255,0.08);
         }
         .legend-item {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 12px;
-          color: rgba(255,255,255,0.4);
+          display: flex; align-items: center; gap: 6px;
+          font-size: 12px; color: rgba(255,255,255,0.4);
         }
-        .legend-dot {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-        }
-
-        /* Edit note */
-        .squad-edit-note {
-          margin-top: 1.5rem;
-          text-align: center;
-          font-size: 12.5px;
-          color: rgba(255,255,255,0.25);
-          font-weight: 300;
-        }
-        .squad-edit-note strong {
-          color: rgba(93,202,165,0.6);
-          font-weight: 500;
-        }
+        .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
 
         @media (max-width: 560px) {
           .squad-section { padding: 4rem 1.25rem; }
           .squad-header { align-items: flex-start; flex-direction: column; }
           .squad-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+          .staff-grid { grid-template-columns: 1fr; }
         }
       `}</style>
 
@@ -351,7 +435,7 @@ export default function Squad() {
 
           <div className={`squad-divider${headerInView ? " visible" : ""}`} />
 
-          {/* Grid */}
+          {/* Player Grid */}
           <div ref={gridRef} className="squad-grid" role="list">
             {filtered.map((player, i) => (
               <PlayerCard
@@ -373,7 +457,26 @@ export default function Squad() {
             ))}
           </div>
 
+          {/* ── Coaching Staff ── */}
+          <div
+            ref={staffRef}
+            className={`staff-section-header${staffInView ? " visible" : ""}`}
+          >
+            <p className="staff-section-label">Coaching Staff</p>
+            <h3 className="staff-section-title">The Dugout</h3>
+            <div className="staff-divider" />
+          </div>
 
+          <div className="staff-grid" role="list">
+            {STAFF.map((member, i) => (
+              <StaffCard
+                key={member.name}
+                member={member}
+                index={i}
+                visible={staffInView}
+              />
+            ))}
+          </div>
 
         </div>
       </section>
