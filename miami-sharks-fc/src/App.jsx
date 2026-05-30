@@ -2,6 +2,7 @@ import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import About from "./components/About";
 import Squad from "./components/Squad";
+import Gallery from "./components/Gallery";
 import Contact from "./components/Contact";
 
 export default function App() {
@@ -12,6 +13,7 @@ export default function App() {
         <Hero />
         <About />
         <Squad />
+        <Gallery />
         <Contact />
       </main>
     </>
