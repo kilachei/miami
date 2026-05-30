@@ -34,9 +34,9 @@ const CONTACT_DETAILS = [
       </svg>
     ),
     label: "WhatsApp",
-    value: "+254 700 000 000",
+    value: "+254 727 318 468",
     sub: "Message us anytime",
-    href: "https://wa.me/254700000000",
+    href: "https://wa.me/254727318468",
   },
   {
     icon: (
@@ -46,9 +46,9 @@ const CONTACT_DETAILS = [
       </svg>
     ),
     label: "Email",
-    value: "info@miamisharksfc.co.ke",
+    value: "kenkilachei@gmail.com",
     sub: "We'll reply within 24 hours",
-    href: "mailto:info@miamisharksfc.co.ke",
+    href: "mailto:kenkilachei@gmail.com",
   },
   {
     icon: (
@@ -60,8 +60,8 @@ const CONTACT_DETAILS = [
       </svg>
     ),
     label: "Training Days",
-    value: "Tue, Thu & Fri ",
-    sub: "Sotik Primary School · 3:00 PM ",
+    value: "Tue, Thu & Fri",
+    sub: "Sotik Primary School · 3:00 PM",
     href: null,
   },
 ];
@@ -74,7 +74,7 @@ export default function Contact() {
   const [formRef, formInView] = useInView(0.1);
 
   const [form, setForm] = useState(INITIAL_FORM);
-  const [status, setStatus] = useState("idle"); // idle | sending | sent | error
+  const [status, setStatus] = useState("idle");
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -84,7 +84,6 @@ export default function Contact() {
     e.preventDefault();
     if (!form.name || !form.message) return;
     setStatus("sending");
-    // Simulate send — wire up to a real backend (EmailJS, Formspree, etc.)
     setTimeout(() => setStatus("sent"), 1400);
   };
 
@@ -108,7 +107,6 @@ export default function Contact() {
           margin: 0 auto;
         }
 
-        /* Header */
         .contact-header {
           max-width: 520px;
           margin-bottom: 3rem;
@@ -150,7 +148,6 @@ export default function Contact() {
           font-weight: 300;
         }
 
-        /* Cards grid */
         .contact-cards {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
@@ -213,7 +210,6 @@ export default function Contact() {
           font-weight: 300;
         }
 
-        /* Form */
         .contact-form-wrap {
           background: #ffffff;
           border: 0.5px solid #e2e8f0;
@@ -306,7 +302,6 @@ export default function Contact() {
         .form-submit:active:not(:disabled) { transform: scale(0.98); }
         .form-submit:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        /* Spinner */
         .spinner {
           width: 16px;
           height: 16px;
@@ -317,7 +312,6 @@ export default function Contact() {
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Success state */
         .form-success {
           text-align: center;
           padding: 2.5rem 1rem;
@@ -359,7 +353,6 @@ export default function Contact() {
         }
         .btn-reset:hover { border-color: #CC0000; color: #CC0000; }
 
-        /* Footer strip */
         .contact-footer-strip {
           margin-top: 2.5rem;
           padding-top: 2rem;
@@ -405,7 +398,6 @@ export default function Contact() {
       <section className="contact-section" id="contact" aria-label="Contact Miami Sharks FC">
         <div className="contact-inner">
 
-          {/* Header */}
           <div ref={headerRef} className={`contact-header${headerInView ? " visible" : ""}`}>
             <p className="contact-tag">Find Us</p>
             <h2 className="contact-title">Contact &amp; Location</h2>
@@ -416,7 +408,6 @@ export default function Contact() {
             </p>
           </div>
 
-          {/* Info cards */}
           <div ref={cardsRef} className="contact-cards" role="list">
             {CONTACT_DETAILS.map((item) => {
               const Tag = item.href ? "a" : "div";
@@ -438,7 +429,6 @@ export default function Contact() {
             })}
           </div>
 
-          {/* Form */}
           <div ref={formRef} className={`contact-form-wrap${formInView ? " visible" : ""}`}>
             {status === "sent" ? (
               <div className="form-success">
@@ -533,7 +523,6 @@ export default function Contact() {
             )}
           </div>
 
-          {/* Footer strip */}
           <div className="contact-footer-strip">
             <div className="footer-club">
               <svg className="footer-crest" viewBox="0 0 36 36" fill="none" aria-hidden="true">
