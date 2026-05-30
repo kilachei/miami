@@ -60,8 +60,8 @@ const CONTACT_DETAILS = [
       </svg>
     ),
     label: "Training Days",
-    value: "Tue, Thu & Sat",
-    sub: "Sotik Stadium · 6:00 AM",
+    value: "Tue, Thu & Fri ",
+    sub: "Sotik Primary School · 3:00 PM ",
     href: null,
   },
 ];
