@@ -67,15 +67,9 @@ function calcAge(dob) {
   return age > 0 && age < 80 ? age : null;
 }
 
-function useInView(threshold = 0.08) {
+function useInView() {
   const ref = useRef(null);
-  const [inView, setInView] = useState(false);
-  useEffect(() => {
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setInView(true); }, { threshold });
-    if (ref.current) obs.observe(ref.current);
-    return () => obs.disconnect();
-  }, [threshold]);
-  return [ref, inView];
+  return [ref, true]; // always visible — no scroll-trigger needed
 }
 
 // ─────────────────────────────────────────
@@ -411,9 +405,9 @@ export default function Squad() {
   const [activeFilter, setActiveFilter] = useState("All");
   const [selectedItem, setSelectedItem] = useState(null);
   const [selectedType, setSelectedType] = useState(null);
-  const [headerRef, headerInView] = useInView(0.1);
-  const [gridRef, gridInView] = useInView(0.05);
-  const [staffRef, staffInView] = useInView(0.1);
+  const [headerRef, headerInView] = useInView();
+  const [gridRef, gridInView] = useInView();
+  const [staffRef, staffInView] = useInView();
 
   // Load from Supabase on mount
   useEffect(() => {
