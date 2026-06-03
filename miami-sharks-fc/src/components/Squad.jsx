@@ -1,67 +1,42 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 
 // ─────────────────────────────────────────
-//  READ FROM LOCALSTORAGE (set by admin panel)
+//  SUPABASE CONFIG
 // ─────────────────────────────────────────
-function loadFromStorage() {
-  try {
-    const raw = JSON.parse(localStorage.getItem("ta_members") || "[]");
-    const cfg = JSON.parse(localStorage.getItem("ta_settings") || "{}");
+const SUPABASE_URL = 'https://mahmndpjrrgpbxmkqllz.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1haG1uZHBqcnJncGJ4bWtxbGx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NTMxNTcsImV4cCI6MjA5NjAyOTE1N30.40gyWWuKlmEYG4ZYmIkE0HsH_Mls4wk56mIkc_yZJpU';
 
-    const POSITION_MAP = {
-      goalkeeper: "Goalkeeper", keeper: "Goalkeeper", goalie: "Goalkeeper",
-      defender: "Defender", back: "Defender", cb: "Defender", rb: "Defender", lb: "Defender",
-      midfielder: "Midfielder", mid: "Midfielder", cm: "Midfielder", dm: "Midfielder", am: "Midfielder",
-      forward: "Forward", striker: "Forward", winger: "Forward", attacker: "Forward", st: "Forward", lw: "Forward", rw: "Forward",
-    };
-
-    function normalizePosition(pos) {
-      if (!pos) return "Midfielder";
-      const lower = pos.toLowerCase();
-      for (const [key, val] of Object.entries(POSITION_MAP)) {
-        if (lower.includes(key)) return val;
-      }
-      return "Midfielder";
+async function fetchMembers() {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/members?order=created_at.asc`, {
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
     }
-
-    const squad = raw
-      .filter((m) => m.role === "player")
-      .map((m) => ({
-        id: m.id,
-        number: parseInt((m.number || "0").replace(/[^0-9]/g, "")) || 0,
-        name: [m.fname, m.lname].filter(Boolean).join(" "),
-        position: normalizePosition(m.position),
-        roleShort: m.position || "Player",
-        nationality: m.nationality || "",
-        dob: m.dob || "",
-        bio: m.bio || "",
-        photo: m.photo || null,
-      }));
-
-    const staff = raw
-      .filter((m) => m.role === "coach" || m.role === "staff")
-      .map((m, i) => ({
-        id: m.id,
-        name: [m.fname, m.lname].filter(Boolean).join(" "),
-        role: m.position || "Staff",
-        roleType: m.role,
-        nationality: m.nationality || "",
-        bio: m.bio || "",
-        photo: m.photo || null,
-        initials: ((m.fname || "?")[0] + (m.lname || "")[0]).toUpperCase(),
-        accentIndex: i % STAFF_ACCENTS.length,
-      }));
-
-    return { squad, staff, settings: cfg };
-  } catch {
-    return { squad: [], staff: [], settings: {} };
-  }
+  });
+  if (!res.ok) throw new Error('Failed to fetch members');
+  return res.json();
 }
 
 // ─────────────────────────────────────────
 //  CONSTANTS
 // ─────────────────────────────────────────
 const POSITIONS = ["All", "Goalkeeper", "Defender", "Midfielder", "Forward"];
+
+const POSITION_MAP = {
+  goalkeeper: "Goalkeeper", keeper: "Goalkeeper", goalie: "Goalkeeper",
+  defender: "Defender", back: "Defender", cb: "Defender", rb: "Defender", lb: "Defender",
+  midfielder: "Midfielder", mid: "Midfielder", cm: "Midfielder", dm: "Midfielder", am: "Midfielder",
+  forward: "Forward", striker: "Forward", winger: "Forward", attacker: "Forward", st: "Forward", lw: "Forward", rw: "Forward",
+};
+
+function normalizePosition(pos) {
+  if (!pos) return "Midfielder";
+  const lower = pos.toLowerCase();
+  for (const [key, val] of Object.entries(POSITION_MAP)) {
+    if (lower.includes(key)) return val;
+  }
+  return "Midfielder";
+}
 
 const POSITION_COLORS = {
   Goalkeeper: { bg: "#1a0000", border: "#CC0000", text: "#ff6b6b", dot: "#CC0000", glow: "rgba(204,0,0,0.25)" },
@@ -104,6 +79,41 @@ function useInView(threshold = 0.08) {
 }
 
 // ─────────────────────────────────────────
+//  TRANSFORM RAW SUPABASE ROW → UI SHAPE
+// ─────────────────────────────────────────
+function transformMembers(raw) {
+  const squad = raw
+    .filter((m) => m.role === "player")
+    .map((m) => ({
+      id: m.id,
+      number: parseInt((m.number || "0").replace(/[^0-9]/g, "")) || 0,
+      name: [m.fname, m.lname].filter(Boolean).join(" "),
+      position: normalizePosition(m.position),
+      roleShort: m.position || "Player",
+      nationality: m.nationality || "",
+      dob: m.dob || "",
+      bio: m.bio || "",
+      photo: m.photo || null,
+    }));
+
+  const staff = raw
+    .filter((m) => m.role === "coach" || m.role === "staff")
+    .map((m, i) => ({
+      id: m.id,
+      name: [m.fname, m.lname].filter(Boolean).join(" "),
+      role: m.position || "Staff",
+      roleType: m.role,
+      nationality: m.nationality || "",
+      bio: m.bio || "",
+      photo: m.photo || null,
+      initials: ((m.fname || "?")[0] + (m.lname || "")[0]).toUpperCase(),
+      accentIndex: i % STAFF_ACCENTS.length,
+    }));
+
+  return { squad, staff };
+}
+
+// ─────────────────────────────────────────
 //  PROFILE MODAL
 // ─────────────────────────────────────────
 function ProfileModal({ item, type, onClose, accentColor }) {
@@ -121,7 +131,7 @@ function ProfileModal({ item, type, onClose, accentColor }) {
     return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = ""; };
   }, [onClose]);
 
-  const age = isPlayer ? calcAge(item.dob) : calcAge(item.dob);
+  const age = calcAge(item.dob);
 
   return (
     <div
@@ -140,11 +150,8 @@ function ProfileModal({ item, type, onClose, accentColor }) {
         overflow:"hidden",animation:"slideUp 0.3s cubic-bezier(0.32,0.72,0,1)",
         position:"relative",
       }}>
-        {/* accent bar */}
         <div style={{ height:4, background: accent, width:"100%" }} />
-        {/* handle */}
         <div style={{ width:36,height:4,borderRadius:2,background:"rgba(255,255,255,0.15)",margin:"14px auto 20px" }} />
-        {/* close */}
         <button onClick={onClose} aria-label="Close" style={{
           position:"absolute",top:18,right:18,
           background:"rgba(255,255,255,0.07)",border:"0.5px solid rgba(255,255,255,0.12)",
@@ -154,7 +161,6 @@ function ProfileModal({ item, type, onClose, accentColor }) {
         }}>×</button>
 
         <div style={{ padding:"0 1.75rem" }}>
-          {/* avatar */}
           <div style={{ display:"flex",flexDirection:"column",alignItems:"center",marginBottom:"1.4rem" }}>
             {isPlayer && (
               <div style={{
@@ -243,7 +249,7 @@ function ProfileModal({ item, type, onClose, accentColor }) {
             )}
           </div>
 
-          {(item.bio) && (
+          {item.bio && (
             <p style={{ fontSize:13,color:"rgba(255,255,255,0.4)",fontWeight:300,lineHeight:1.7,textAlign:"center",marginTop:"1.2rem" }}>{item.bio}</p>
           )}
         </div>
@@ -290,15 +296,10 @@ function PlayerCard({ player, index, visible, onClick }) {
         e.currentTarget.style.boxShadow="none";
       }}
     >
-      {/* number */}
       <div style={{ position:"absolute",top:10,right:12,fontFamily:"'Bebas Neue',sans-serif",fontSize:14,letterSpacing:"0.5px",color:"rgba(255,255,255,0.2)" }}>
         {player.number || "—"}
       </div>
-      {/* view hint */}
-      <div style={{ position:"absolute",bottom:10,right:12,fontSize:10,fontWeight:500,textTransform:"uppercase",letterSpacing:"1.5px",color:"rgba(255,255,255,0.25)",opacity:0,transition:"opacity 0.2s" }}
-        className="view-hint">View</div>
 
-      {/* avatar */}
       <div style={{
         width:62,height:62,borderRadius:"50%",margin:"0 auto 11px",overflow:"hidden",
         display:"flex",alignItems:"center",justifyContent:"center",
@@ -390,7 +391,7 @@ function EmptyState({ label }) {
   return (
     <div style={{ gridColumn:"1/-1",textAlign:"center",padding:"48px 20px",color:"rgba(255,255,255,0.15)",fontSize:13 }}>
       <div style={{ fontSize:36,marginBottom:10,opacity:0.3 }}>⚽</div>
-      No {label} added yet. Add them in the admin panel.
+      No {label} added yet.
     </div>
   );
 }
@@ -399,7 +400,10 @@ function EmptyState({ label }) {
 //  MAIN EXPORT
 // ─────────────────────────────────────────
 export default function Squad() {
-  const [data, setData] = useState(() => loadFromStorage());
+  const [squad, setSquad] = useState([]);
+  const [staff, setStaff] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [activeFilter, setActiveFilter] = useState("All");
   const [selectedItem, setSelectedItem] = useState(null);
   const [selectedType, setSelectedType] = useState(null);
@@ -407,18 +411,23 @@ export default function Squad() {
   const [gridRef, gridInView] = useInView(0.05);
   const [staffRef, staffInView] = useInView(0.1);
 
-  // Live-reload if admin panel saves new data in the same browser
+  // Load from Supabase on mount
   useEffect(() => {
-    const onStorage = (e) => {
-      if (e.key === "ta_members" || e.key === "ta_settings") {
-        setData(loadFromStorage());
-      }
-    };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    fetchMembers()
+      .then((raw) => {
+        const { squad, staff } = transformMembers(raw);
+        setSquad(squad);
+        setStaff(staff);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
+      });
   }, []);
 
-  const { squad, staff, settings } = data;
+  // Settings from localStorage (team name, accent color)
+  const settings = JSON.parse(localStorage.getItem('ta_settings') || '{}');
   const accent = settings.accent || "#2f81f7";
   const teamName = settings.teamName || "The Team";
 
@@ -435,7 +444,6 @@ export default function Squad() {
         .squad-section button { font-family: 'DM Sans', sans-serif; }
         .filter-btn { transition: background 0.18s, color 0.18s, border-color 0.18s; }
         .filter-btn:hover:not(.active) { background: rgba(255,255,255,0.09) !important; color: rgba(255,255,255,0.85) !important; }
-        .player-card:hover .view-hint { opacity: 1 !important; }
         @media (max-width: 560px) {
           .squad-grid { grid-template-columns: repeat(auto-fill, minmax(130px,1fr)) !important; gap: 10px !important; }
           .staff-grid { grid-template-columns: 1fr !important; }
@@ -452,7 +460,7 @@ export default function Squad() {
       >
         <div style={{ maxWidth:900, margin:"0 auto" }}>
 
-          {/* ── Header ── */}
+          {/* Header */}
           <div
             ref={headerRef}
             className="squad-header-wrap"
@@ -497,90 +505,107 @@ export default function Squad() {
             </div>
           </div>
 
-          {/* accent divider */}
           <div style={{
             width:36,height:2,background:accent,borderRadius:2,marginBottom:"2.2rem",
             opacity: headerInView ? 1 : 0,
             transition:"opacity 0.4s 0.2s ease",
           }} />
 
-          {/* ── Players grid ── */}
-          <div
-            ref={gridRef}
-            className="squad-grid"
-            style={{ display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(148px,1fr))",gap:14 }}
-            role="list"
-          >
-            {filtered.length === 0
-              ? <EmptyState label="players" />
-              : filtered.map((player, i) => (
-                <PlayerCard
-                  key={player.id || player.number}
-                  player={player}
-                  index={i}
-                  visible={gridInView}
-                  onClick={() => openModal(player, "player")}
-                />
-              ))
-            }
-          </div>
+          {/* Loading / Error */}
+          {loading && (
+            <div style={{ textAlign:"center",padding:"48px",color:"rgba(255,255,255,0.3)",fontSize:13 }}>
+              Loading squad…
+            </div>
+          )}
+          {error && (
+            <div style={{ textAlign:"center",padding:"48px",color:"#f85149",fontSize:13 }}>
+              Failed to load squad: {error}
+            </div>
+          )}
 
-          {/* ── Legend ── */}
-          {squad.length > 0 && (
+          {/* Players grid */}
+          {!loading && !error && (
+            <div
+              ref={gridRef}
+              className="squad-grid"
+              style={{ display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(148px,1fr))",gap:14 }}
+              role="list"
+            >
+              {filtered.length === 0
+                ? <EmptyState label="players" />
+                : filtered.map((player, i) => (
+                  <PlayerCard
+                    key={player.id}
+                    player={player}
+                    index={i}
+                    visible={gridInView}
+                    onClick={() => openModal(player, "player")}
+                  />
+                ))
+              }
+            </div>
+          )}
+
+          {/* Legend */}
+          {!loading && squad.length > 0 && (
             <div style={{
               display:"flex",flexWrap:"wrap",gap:"1rem",
               marginTop:"2rem",paddingTop:"1.75rem",
               borderTop:"0.5px solid rgba(255,255,255,0.07)",
-            }} aria-label="Position colour legend">
+            }}>
               {Object.entries(POSITION_COLORS).map(([pos, c]) => (
                 <div key={pos} style={{ display:"flex",alignItems:"center",gap:6,fontSize:12,color:"rgba(255,255,255,0.35)" }}>
-                  <span style={{ width:7,height:7,borderRadius:"50%",background:c.dot,flexShrink:0 }} aria-hidden="true" />
+                  <span style={{ width:7,height:7,borderRadius:"50%",background:c.dot,flexShrink:0 }} />
                   {pos}
                 </div>
               ))}
             </div>
           )}
 
-          {/* ── Staff ── */}
-          <div
-            ref={staffRef}
-            style={{
-              marginTop:"3.5rem",marginBottom:"1.5rem",
-              opacity: staffInView ? 1 : 0,
-              transform: staffInView ? "translateY(0)" : "translateY(16px)",
-              transition:"opacity 0.6s ease, transform 0.6s ease",
-            }}
-          >
-            <p style={{ fontSize:11,fontWeight:500,textTransform:"uppercase",letterSpacing:"2.5px",color:"#CC0000",marginBottom:"0.4rem" }}>Coaching Staff</p>
-            <h3 style={{ fontFamily:"'Bebas Neue',sans-serif",fontSize:"clamp(24px,4vw,34px)",letterSpacing:"2px",color:"#fff",lineHeight:1 }}>
-              The Dugout
-            </h3>
-            <div style={{ width:36,height:2,background:"#CC0000",borderRadius:2,marginTop:"0.6rem" }} />
-          </div>
+          {/* Staff */}
+          {!loading && (
+            <>
+              <div
+                ref={staffRef}
+                style={{
+                  marginTop:"3.5rem",marginBottom:"1.5rem",
+                  opacity: staffInView ? 1 : 0,
+                  transform: staffInView ? "translateY(0)" : "translateY(16px)",
+                  transition:"opacity 0.6s ease, transform 0.6s ease",
+                }}
+              >
+                <p style={{ fontSize:11,fontWeight:500,textTransform:"uppercase",letterSpacing:"2.5px",color:"#CC0000",marginBottom:"0.4rem" }}>Coaching Staff</p>
+                <h3 style={{ fontFamily:"'Bebas Neue',sans-serif",fontSize:"clamp(24px,4vw,34px)",letterSpacing:"2px",color:"#fff",lineHeight:1 }}>
+                  The Dugout
+                </h3>
+                <div style={{ width:36,height:2,background:"#CC0000",borderRadius:2,marginTop:"0.6rem" }} />
+              </div>
 
-          <div
-            className="staff-grid"
-            style={{ display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:14 }}
-            role="list"
-          >
-            {staff.length === 0
-              ? <EmptyState label="coaching staff" />
-              : staff.map((member, i) => (
-                <StaffCard
-                  key={member.id || member.name}
-                  member={member}
-                  index={i}
-                  visible={staffInView}
-                  onClick={() => openModal(member, "staff")}
-                />
-              ))
-            }
-          </div>
+              <div
+                className="staff-grid"
+                style={{ display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:14 }}
+                role="list"
+              >
+                {staff.length === 0
+                  ? <EmptyState label="coaching staff" />
+                  : staff.map((member, i) => (
+                    <StaffCard
+                      key={member.id}
+                      member={member}
+                      index={i}
+                      visible={staffInView}
+                      onClick={() => openModal(member, "staff")}
+                    />
+                  ))
+                }
+              </div>
+            </>
+          )}
 
         </div>
       </section>
 
-      {/* ── Modal ── */}
+      {/* Modal */}
       {selectedItem && (
         <ProfileModal
           item={selectedItem}
