@@ -174,9 +174,11 @@ function ProfileModal({ item, type, onClose, accentColor }) {
               width:100,height:100,borderRadius:"50%",overflow:"hidden",
               border:`3px solid ${accent}`,
               display:"flex",alignItems:"center",justifyContent:"center",
-              background: isPlayer ? colors.bg : (STAFF_ACCENTS[item.accentIndex]?.bg || "#1a0000"),
+              background: isPlayer
+                ? (item.photo && !imgError ? colors.bg : colors.border)
+                : (STAFF_ACCENTS[item.accentIndex]?.color || accent),
               fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:2,
-              color: isPlayer ? colors.text : accent,
+              color:"#fff",
               boxShadow: `0 0 28px ${accent}44`,
               marginBottom:14,
             }}>
@@ -303,8 +305,10 @@ function PlayerCard({ player, index, visible, onClick }) {
       <div style={{
         width:62,height:62,borderRadius:"50%",margin:"0 auto 11px",overflow:"hidden",
         display:"flex",alignItems:"center",justifyContent:"center",
-        background:colors.bg, border:`2px solid ${colors.border}`,
-        fontFamily:"'Bebas Neue',sans-serif",fontSize:17,letterSpacing:1,color:colors.text,
+        background: player.photo && !imgError ? colors.bg : colors.border,
+        border:`2px solid ${colors.border}`,
+        fontFamily:"'Bebas Neue',sans-serif",fontSize:17,letterSpacing:1,
+        color:"#fff",
       }}>
         {player.photo && !imgError
           ? <img src={player.photo} alt={player.name} onError={()=>setImgError(true)} style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"center top"}} />
