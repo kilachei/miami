@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TeamAdmin — Squad Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:#0d1117; --bg2:#161b22; --bg3:#21262d; --bg4:#30363d;
+  --border:rgba(255,255,255,0.08); --border2:rgba(255,255,255,0.14);
+  --text:#e6edf3; --text2:#8b949e; --text3:#484f58;
+  --accent:#2f81f7; --accent2:#1f6feb;
+  --green:#3fb950; --orange:#d29922; --red:#f85149; --purple:#bc8cff;
+  --radius:8px; --radius-lg:12px;
+}
+body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; display:flex; flex-direction:column; }
+
+/* ══ LOGIN ══ */
+#login-screen { flex:1; display:flex; align-items:center; justify-content:center; min-height:100vh; }
+.login-wrap { display:flex; flex-direction:column; align-items:center; gap:24px; }
+.login-brand { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:var(--text3); }
+.login-box { width:360px; background:var(--bg2); border:1px solid var(--border2); border-radius:var(--radius-lg); padding:36px; }
+.login-head { margin-bottom:28px; }
+.login-title { font-size:22px; font-weight:600; letter-spacing:-0.02em; }
+.login-title span { color:var(--accent); }
+.login-sub { font-size:13px; color:var(--text2); margin-top:4px; }
+.form-field { margin-bottom:14px; }
+.form-field label { display:block; font-size:12px; color:var(--text2); margin-bottom:5px; font-weight:500; }
+input,select,textarea { width:100%; background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius); color:var(--text); font-family:'DM Sans',sans-serif; font-size:14px; padding:9px 13px; outline:none; transition:border-color 0.15s; }
+input:focus,select:focus,textarea:focus { border-color:var(--accent); }
+select option { background:var(--bg3); }
+.login-hint { font-size:11px; color:var(--text3); margin-top:3px; }
+.login-error { font-size:12px; color:var(--red); margin-top:10px; display:none; }
+
+/* ══ BUTTONS ══ */
+.btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:var(--radius); font-size:13px; font-weight:500; font-family:'DM Sans',sans-serif; cursor:pointer; border:1px solid var(--border2); background:var(--bg3); color:var(--text); transition:background 0.12s,border-color 0.12s; white-space:nowrap; }
+.btn:hover { background:var(--bg4); }
+.btn-primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+.btn-primary:hover { background:var(--accent2); }
+.btn-green { background:rgba(63,185,80,0.15); border-color:rgba(63,185,80,0.3); color:var(--green); }
+.btn-green:hover { background:rgba(63,185,80,0.25); }
+.btn-danger { background:transparent; border-color:rgba(248,81,73,0.3); color:var(--red); }
+.btn-danger:hover { background:rgba(248,81,73,0.1); }
+.btn-sm { padding:5px 10px; font-size:12px; }
+.btn-full { width:100%; justify-content:center; padding:10px; font-size:14px; }
+.btn svg { width:14px; height:14px; flex-shrink:0; }
+.btn-icon { padding:6px; width:30px; height:30px; justify-content:center; }
+
+/* ══ ADMIN SHELL ══ */
+#admin-screen { display:none; flex:1; flex-direction:column; min-height:100vh; }
+.topnav { height:52px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 20px; position:sticky; top:0; z-index:100; gap:0; }
+.nav-brand { font-family:'DM Mono',monospace; font-size:13px; color:var(--text2); margin-right:28px; white-space:nowrap; flex-shrink:0; }
+.nav-brand b { color:var(--accent); font-weight:500; }
+.nav-team-name { font-size:12px; color:var(--text3); margin-right:28px; }
+.nav-tabs { display:flex; gap:2px; flex:1; overflow-x:auto; scrollbar-width:none; }
+.nav-tabs::-webkit-scrollbar { display:none; }
+.nav-tab { padding:6px 13px; font-size:13px; color:var(--text2); border-radius:var(--radius); cursor:pointer; transition:background 0.12s,color 0.12s; font-weight:400; white-space:nowrap; display:flex; align-items:center; gap:5px; flex-shrink:0; }
+.nav-tab svg { width:13px; height:13px; }
+.nav-tab:hover { color:var(--text); background:var(--bg3); }
+.nav-tab.active { color:var(--text); background:var(--bg3); font-weight:500; }
+.nav-right { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+.nav-user { font-size:12px; color:var(--text2); display:flex; align-items:center; gap:6px; }
+.avatar-sm { width:28px; height:28px; border-radius:50%; background:var(--accent2); display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; color:#fff; flex-shrink:0; }
+
+/* ══ PAGE LAYOUT ══ */
+.page { display:none; flex:1; flex-direction:column; overflow-y:auto; }
+.page.active { display:flex; }
+.page-header { padding:24px 32px 18px; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-shrink:0; }
+.page-header-left { }
+.page-title { font-size:19px; font-weight:600; letter-spacing:-0.02em; }
+.page-sub { font-size:13px; color:var(--text2); margin-top:3px; }
+.page-header-actions { display:flex; gap:8px; flex-shrink:0; }
+
+/* ══ STATS STRIP ══ */
+.stats-strip { display:grid; gap:1px; background:var(--border); border-bottom:1px solid var(--border); flex-shrink:0; }
+.stat-block { background:var(--bg); padding:18px 24px; }
+.stat-label { font-size:11px; color:var(--text2); text-transform:uppercase; letter-spacing:0.07em; font-weight:500; margin-bottom:4px; }
+.stat-value { font-size:26px; font-weight:600; letter-spacing:-0.03em; }
+.stat-value.blue{color:var(--accent)} .stat-value.green{color:var(--green)} .stat-value.orange{color:var(--orange)} .stat-value.purple{color:var(--purple)}
+
+/* ══ FILTERS ══ */
+.filters { padding:14px 32px; display:flex; align-items:center; gap:8px; border-bottom:1px solid var(--border); flex-wrap:wrap; flex-shrink:0; }
+.filter-pill { padding:4px 13px; border-radius:20px; font-size:12px; font-weight:500; cursor:pointer; border:1px solid var(--border); color:var(--text2); background:transparent; transition:all 0.12s; font-family:'DM Sans',sans-serif; }
+.filter-pill:hover { border-color:var(--border2); color:var(--text); }
+.filter-pill.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+.search-wrap { margin-left:auto; position:relative; }
+.search-wrap svg { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text3); width:13px; height:13px; pointer-events:none; }
+.search-wrap input { width:200px; padding:6px 12px 6px 30px; font-size:13px; }
+
+/* ══ MEMBERS GRID ══ */
+.members-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:14px; padding:22px 32px; }
+.member-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; transition:border-color 0.15s,transform 0.15s; cursor:pointer; }
+.member-card:hover { border-color:var(--border2); transform:translateY(-2px); }
+.card-photo { width:100%; height:150px; background:var(--bg3); display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
+.card-photo img { width:100%; height:100%; object-fit:cover; }
+.card-photo-placeholder { font-size:48px; opacity:0.2; }
+.card-badge { position:absolute; top:8px; left:8px; font-size:10px; font-weight:600; padding:2px 7px; border-radius:20px; text-transform:uppercase; letter-spacing:0.04em; }
+.badge-player{background:rgba(47,129,247,0.2);color:#79b8ff;border:1px solid rgba(47,129,247,0.25)}
+.badge-coach{background:rgba(63,185,80,0.2);color:#85e89d;border:1px solid rgba(63,185,80,0.25)}
+.badge-staff{background:rgba(210,153,34,0.2);color:#e3b341;border:1px solid rgba(210,153,34,0.25)}
+.card-number { position:absolute; top:8px; right:8px; font-family:'DM Mono',monospace; font-size:12px; font-weight:500; color:rgba(255,255,255,0.45); background:rgba(0,0,0,0.4); padding:1px 6px; border-radius:4px; }
+.card-body { padding:12px 14px; }
+.card-name { font-size:13px; font-weight:600; color:var(--text); margin-bottom:2px; }
+.card-pos { font-size:12px; color:var(--text2); margin-bottom:10px; }
+.card-actions { display:flex; gap:5px; }
+.empty-msg { grid-column:1/-1; text-align:center; padding:50px 20px; color:var(--text3); font-size:13px; }
+.empty-msg svg { width:36px; height:36px; margin:0 auto 10px; display:block; opacity:0.25; }
+
+/* ══ DASHBOARD ══ */
+.dash-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:14px; padding:24px 32px 0; }
+.dash-stat { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-lg); padding:20px 22px; }
+.dash-stat-ico { font-size:24px; margin-bottom:10px; }
+.dash-stat-val { font-size:32px; font-weight:600; letter-spacing:-0.04em; margin-bottom:4px; }
+.dash-stat-label { font-size:12px; color:var(--text2); }
+.dash-two { display:grid; grid-template-columns:1fr 1fr; gap:14px; padding:14px 32px 24px; }
+.dash-panel { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; }
+.dash-panel-head { padding:14px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.dash-panel-title { font-size:13px; font-weight:600; }
+.dash-panel-body { padding:4px 0; }
+.dash-row { display:flex; align-items:center; gap:10px; padding:10px 18px; border-bottom:1px solid var(--border); font-size:13px; }
+.dash-row:last-child { border-bottom:none; }
+.dash-avatar { width:32px; height:32px; border-radius:50%; background:var(--bg3); flex-shrink:0; overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:14px; }
+.dash-avatar img { width:100%; height:100%; object-fit:cover; }
+.dash-row-name { font-weight:500; font-size:13px; }
+.dash-row-sub { font-size:11px; color:var(--text2); }
+.dash-empty { padding:24px; text-align:center; font-size:13px; color:var(--text3); }
+
+/* ══ FIXTURES ══ */
+.fixtures-list { padding:22px 32px; display:flex; flex-direction:column; gap:10px; }
+.fixture-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px 20px; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:16px; cursor:pointer; transition:border-color 0.15s; }
+.fixture-card:hover { border-color:var(--border2); }
+.fixture-team { display:flex; flex-direction:column; gap:2px; }
+.fixture-team-name { font-size:14px; font-weight:600; }
+.fixture-team-home { text-align:left; }
+.fixture-team-away { text-align:right; }
+.fixture-center { text-align:center; }
+.fixture-vs { font-size:11px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:0.07em; margin-bottom:4px; }
+.fixture-score { font-family:'DM Mono',monospace; font-size:20px; font-weight:500; color:var(--text); }
+.fixture-date { font-size:11px; color:var(--text2); margin-top:4px; }
+.fixture-venue { font-size:11px; color:var(--text3); }
+.fixture-status { display:inline-block; padding:2px 8px; border-radius:20px; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; margin-top:4px; }
+.status-upcoming { background:rgba(47,129,247,0.15); color:#79b8ff; }
+.status-played { background:rgba(63,185,80,0.15); color:var(--green); }
+.status-live { background:rgba(248,81,73,0.15); color:var(--red); }
+
+/* ══ SETTINGS ══ */
+.settings-wrap { padding:28px 32px; max-width:640px; display:flex; flex-direction:column; gap:28px; }
+.settings-section { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; }
+.settings-section-head { padding:16px 20px; border-bottom:1px solid var(--border); }
+.settings-section-title { font-size:14px; font-weight:600; }
+.settings-section-sub { font-size:12px; color:var(--text2); margin-top:2px; }
+.settings-section-body { padding:20px; display:flex; flex-direction:column; gap:14px; }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.logo-upload { width:80px; height:80px; border-radius:50%; border:2px dashed var(--border2); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:28px; overflow:hidden; flex-shrink:0; transition:border-color 0.15s; }
+.logo-upload:hover { border-color:var(--accent); }
+.logo-upload img { width:100%; height:100%; object-fit:cover; }
+.color-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.color-swatch { width:30px; height:30px; border-radius:50%; cursor:pointer; border:2px solid transparent; transition:border-color 0.12s,transform 0.12s; }
+.color-swatch:hover { transform:scale(1.15); }
+.color-swatch.selected { border-color:var(--text); }
+
+/* ══ MODAL ══ */
+.modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:200; display:none; align-items:center; justify-content:center; padding:16px; }
+.modal-backdrop.open { display:flex; }
+.modal { background:var(--bg2); border:1px solid var(--border2); border-radius:var(--radius-lg); width:100%; max-width:480px; max-height:92vh; overflow-y:auto; animation:slideIn 0.18s ease; }
+@keyframes slideIn { from{opacity:0;transform:translateY(-10px) scale(0.98)} to{opacity:1;transform:none} }
+.modal-head { display:flex; align-items:center; justify-content:space-between; padding:18px 22px; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--bg2); z-index:1; }
+.modal-title { font-size:15px; font-weight:600; }
+.modal-body { padding:22px; display:flex; flex-direction:column; gap:14px; }
+.modal-foot { display:flex; justify-content:flex-end; gap:8px; padding:14px 22px; border-top:1px solid var(--border); position:sticky; bottom:0; background:var(--bg2); }
+.photo-upload-area { border:1.5px dashed var(--border2); border-radius:var(--radius); padding:22px; text-align:center; cursor:pointer; transition:border-color 0.15s,background 0.15s; }
+.photo-upload-area:hover { border-color:var(--accent); background:rgba(47,129,247,0.04); }
+.photo-preview-circle { width:80px; height:80px; border-radius:50%; object-fit:cover; margin:0 auto 8px; display:block; border:2px solid var(--border2); }
+.upload-icon { font-size:26px; margin-bottom:6px; }
+.upload-label { font-size:13px; color:var(--text2); }
+.upload-sub { font-size:11px; color:var(--text3); margin-top:3px; }
+
+/* ══ PUBLIC PAGE ══ */
+#pub-page { display:none; position:fixed; inset:0; z-index:300; overflow-y:auto; flex-direction:column; }
+#pub-page.open { display:flex; }
+.pub-topbar { position:sticky; top:0; z-index:10; display:flex; align-items:center; justify-content:space-between; padding:0 48px; height:60px; backdrop-filter:blur(16px); border-bottom:1px solid rgba(255,255,255,0.06); }
+.pub-brand { font-family:'DM Mono',monospace; font-size:15px; font-weight:500; letter-spacing:-0.01em; }
+.pub-nav { display:flex; gap:24px; }
+.pub-nav a { font-size:13px; color:rgba(255,255,255,0.45); cursor:pointer; text-decoration:none; transition:color 0.12s; }
+.pub-nav a:hover,.pub-nav a.active { color:#fff; }
+.pub-hero { padding:72px 48px 52px; position:relative; overflow:hidden; }
+.pub-hero::before { content:''; position:absolute; top:-120px; left:-80px; width:600px; height:600px; border-radius:50%; opacity:0.06; pointer-events:none; }
+.pub-eyebrow { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.14em; text-transform:uppercase; margin-bottom:14px; opacity:0.6; }
+.pub-heading { font-size:52px; font-weight:600; color:#fff; letter-spacing:-0.04em; line-height:1.05; margin-bottom:14px; }
+.pub-sub { font-size:15px; color:rgba(255,255,255,0.4); max-width:480px; line-height:1.6; }
+.pub-section { padding:0 48px 52px; }
+.pub-section-title { font-size:11px; color:rgba(255,255,255,0.25); text-transform:uppercase; letter-spacing:0.1em; font-weight:500; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.06); }
+.pub-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:14px; }
+.pub-card { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:var(--radius-lg); overflow:hidden; transition:border-color 0.15s,transform 0.15s; }
+.pub-card:hover { border-color:rgba(255,255,255,0.15); transform:translateY(-3px); }
+.pub-photo { width:100%; height:180px; display:flex; align-items:center; justify-content:center; font-size:48px; opacity:0.25; overflow:hidden; }
+.pub-photo img { width:100%; height:100%; object-fit:cover; opacity:1; }
+.pub-info { padding:13px 15px; }
+.pub-name { font-size:13px; font-weight:600; color:#fff; }
+.pub-pos { font-size:11px; color:rgba(255,255,255,0.35); margin-top:2px; }
+.pub-num { font-family:'DM Mono',monospace; font-size:11px; margin-top:5px; opacity:0.5; }
+.pub-fixture { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:var(--radius-lg); padding:16px 20px; margin-bottom:10px; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:14px; }
+.pub-close-bar { background:rgba(248,81,73,0.12); border:1px solid rgba(248,81,73,0.2); border-radius:var(--radius); padding:6px 14px; font-size:12px; color:var(--red); cursor:pointer; font-family:'DM Sans',sans-serif; }
+
+/* ══ TOAST ══ */
+.toast { position:fixed; bottom:24px; right:24px; z-index:9999; background:var(--bg2); border:1px solid var(--green); color:var(--green); font-size:13px; padding:11px 16px; border-radius:var(--radius); display:none; align-items:center; gap:8px; box-shadow:0 4px 24px rgba(0,0,0,0.4); }
+.toast.show { display:flex; animation:toastIn 0.2s ease; }
+@keyframes toastIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+
+/* ══ MISC ══ */
+.divider { border:none; border-top:1px solid var(--border); }
+.tag { display:inline-block; padding:2px 8px; border-radius:20px; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; }
+hr.sec { border:none; border-top:1px solid var(--border); margin:4px 0; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ LOGIN ══════════════ -->
+<div id="login-screen">
+  <div class="login-wrap">
+    <div class="login-brand">TeamAdmin · Squad Manager</div>
+    <div class="login-box">
+      <div class="login-head">
+        <div class="login-title">Welcome <span>back</span></div>
+        <div class="login-sub">Sign in to manage your team</div>
+      </div>
+      <div class="form-field">
+        <label>Username</label>
+        <input id="l-user" type="text" placeholder="admin" value="admin">
+        <div class="login-hint">Default: admin / admin123</div>
+      </div>
+      <div class="form-field">
+        <label>Password</label>
+        <input id="l-pass" type="password" placeholder="••••••••" value="admin123" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <div id="login-error" class="login-error">Incorrect username or password.</div>
+      <br>
+      <button class="btn btn-primary btn-full" onclick="doLogin()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M14 12H3"/></svg>
+        Sign in
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ ADMIN ══════════════ -->
+<div id="admin-screen">
+
+  <nav class="topnav">
+    <div class="nav-brand">Team<b>Admin</b></div>
+    <div id="nav-team-name" class="nav-team-name"></div>
+    <div class="nav-tabs">
+      <div class="nav-tab active" onclick="showPage('dashboard')" id="tab-dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-tab" onclick="showPage('squad')" id="tab-squad">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        Players
+      </div>
+      <div class="nav-tab" onclick="showPage('coaches')" id="tab-coaches">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M3 21v-1a9 9 0 0118 0v1"/></svg>
+        Coaches
+      </div>
+      <div class="nav-tab" onclick="showPage('fixtures')" id="tab-fixtures">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Fixtures
+      </div>
+      <div class="nav-tab" onclick="showPage('website')" id="tab-website">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+        Website
+      </div>
+      <div class="nav-tab" onclick="showPage('settings')" id="tab-settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Settings
+      </div>
+    </div>
+    <div class="nav-right">
+      <div class="nav-user">
+        <div class="avatar-sm" id="user-avatar">AD</div>
+        <span id="user-label">admin</span>
+      </div>
+      <button class="btn btn-sm" onclick="doLogout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        Out
+      </button>
+    </div>
+  </nav>
+
+  <!-- ── DASHBOARD ── -->
+  <div class="page active" id="page-dashboard">
+    <div class="page-header">
+      <div class="page-header-left">
+        <div class="page-title" id="dash-greeting">Good morning</div>
+        <div class="page-sub" id="dash-date"></div>
+      </div>
+      <div class="page-header-actions">
+        <button class="btn" onclick="showPage('squad');openModal('player')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add member
+        </button>
+        <button class="btn btn-primary" onclick="openPublicPage()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/></svg>
+          View website
+        </button>
+      </div>
+    </div>
+    <div class="dash-grid" id="dash-stats-grid"></div>
+    <div class="dash-two" id="dash-two"></div>
+  </div>
+
+  <!-- ── SQUAD ── -->
+  <div class="page" id="page-squad">
+    <div class="page-header">
+      <div class="page-header-left">
+        <div class="page-title">Players</div>
+        <div class="page-sub">Manage your squad roster and photos</div>
+      </div>
+      <div class="page-header-actions">
+        <button class="btn" onclick="exportCSV('player')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          Export CSV
+        </button>
+        <button class="btn btn-primary" onclick="openModal('player')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add player
+        </button>
+      </div>
+    </div>
+    <div class="stats-strip" id="squad-stats" style="grid-template-columns:repeat(4,1fr)"></div>
+    <div class="filters">
+      <button class="filter-pill active" onclick="filterMembers('all','squad')" id="fp-squad-all">All</button>
+      <button class="filter-pill" onclick="filterMembers('goalkeeper','squad')" id="fp-squad-goalkeeper">Goalkeepers</button>
+      <button class="filter-pill" onclick="filterMembers('defender','squad')" id="fp-squad-defender">Defenders</button>
+      <button class="filter-pill" onclick="filterMembers('midfielder','squad')" id="fp-squad-midfielder">Midfielders</button>
+      <button class="filter-pill" onclick="filterMembers('forward','squad')" id="fp-squad-forward">Forwards</button>
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search…" oninput="searchMembers(this.value,'squad')" id="search-squad">
+      </div>
+    </div>
+    <div class="members-grid" id="grid-squad"></div>
+  </div>
+
+  <!-- ── COACHES ── -->
+  <div class="page" id="page-coaches">
+    <div class="page-header">
+      <div class="page-header-left">
+        <div class="page-title">Coaching Staff</div>
+        <div class="page-sub">Head coach, assistants, physios and support staff</div>
+      </div>
+      <div class="page-header-actions">
+        <button class="btn" onclick="exportCSV('coach')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          Export CSV
+        </button>
+        <button class="btn btn-primary" onclick="openModal('coach')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add coach
+        </button>
+      </div>
+    </div>
+    <div class="stats-strip" id="coach-stats" style="grid-template-columns:repeat(4,1fr)"></div>
+    <div class="filters">
+      <button class="filter-pill active" onclick="filterMembers('all','coaches')" id="fp-coaches-all">All</button>
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search…" oninput="searchMembers(this.value,'coaches')" id="search-coaches">
+      </div>
+    </div>
+    <div class="members-grid" id="grid-coaches"></div>
+  </div>
+
+  <!-- ── FIXTURES ── -->
+  <div class="page" id="page-fixtures">
+    <div class="page-header">
+      <div class="page-header-left">
+        <div class="page-title">Fixtures & Results</div>
+        <div class="page-sub">Schedule upcoming matches and record results</div>
+      </div>
+      <div class="page-header-actions">
+        <button class="btn btn-primary" onclick="openFixtureModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add fixture
+        </button>
+      </div>
+    </div>
+    <div class="stats-strip" id="fixture-stats" style="grid-template-columns:repeat(4,1fr)"></div>
+    <div class="filters">
+      <button class="filter-pill active" onclick="filterFixtures('all')" id="ff-all">All</button>
+      <button class="filter-pill" onclick="filterFixtures('upcoming')" id="ff-upcoming">Upcoming</button>
+      <button class="filter-pill" onclick="filterFixtures('played')" id="ff-played">Results</button>
+    </div>
+    <div class="fixtures-list" id="fixtures-list"></div>
+  </div>
+
+  <!-- ── WEBSITE ── -->
+  <div class="page" id="page-website">
+    <div class="page-header">
+      <div class="page-header-left">
+        <div class="page-title">Public Website</div>
+        <div class="page-sub">Preview and open your team's public page</div>
+      </div>
+      <button class="btn btn-primary" onclick="openPublicPage()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/></svg>
+        Open preview
+      </button>
+    </div>
+    <div style="padding:0 32px 32px">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);margin-top:24px;overflow:hidden">
+        <div style="padding:14px 20px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;">Website preview</div>
+        <iframe id="website-iframe" style="width:100%;height:500px;border:none;display:block;" srcdoc="<p style='font-family:sans-serif;padding:40px;color:#666'>Click &quot;Open preview&quot; to load</p>"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SETTINGS ── -->
+  <div class="page" id="page-settings">
+    <div class="page-header">
+      <div class="page-header-left">
+        <div class="page-title">Settings</div>
+        <div class="page-sub">Configure your team profile and credentials</div>
+      </div>
+    </div>
+    <div class="settings-wrap">
+
+      <div class="settings-section">
+        <div class="settings-section-head">
+          <div class="settings-section-title">Team Profile</div>
+          <div class="settings-section-sub">Name, logo, and colors shown on the public website</div>
+        </div>
+        <div class="settings-section-body">
+          <div style="display:flex;gap:16px;align-items:center">
+            <div class="logo-upload" id="logo-upload-btn" onclick="document.getElementById('logo-file').click()" title="Upload logo">
+              <img id="logo-preview" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%;">
+              <span id="logo-placeholder">🏆</span>
+            </div>
+            <input type="file" id="logo-file" accept="image/*" style="display:none" onchange="handleLogoUpload(event)">
+            <div>
+              <div style="font-size:13px;font-weight:500;margin-bottom:4px">Team logo</div>
+              <div style="font-size:12px;color:var(--text2)">Click the circle to upload a logo image</div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field" style="margin:0">
+              <label>Team name</label>
+              <input type="text" id="s-teamname" placeholder="e.g. Nairobi FC">
+            </div>
+            <div class="form-field" style="margin:0">
+              <label>Founded year</label>
+              <input type="text" id="s-founded" placeholder="e.g. 2005">
+            </div>
+          </div>
+          <div class="form-field" style="margin:0">
+            <label>Stadium / Home ground</label>
+            <input type="text" id="s-stadium" placeholder="e.g. Nyayo Stadium">
+          </div>
+          <div class="form-field" style="margin:0">
+            <label>Team tagline</label>
+            <input type="text" id="s-tagline" placeholder="e.g. Pride of the Nation">
+          </div>
+          <div class="form-field" style="margin:0">
+            <label>Accent color (for website)</label>
+            <div class="color-row" id="color-swatches"></div>
+          </div>
+          <button class="btn btn-primary" onclick="saveSettings()" style="align-self:flex-start">Save team profile</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-head">
+          <div class="settings-section-title">Change Password</div>
+          <div class="settings-section-sub">Update your admin login credentials</div>
+        </div>
+        <div class="settings-section-body">
+          <div class="form-field" style="margin:0">
+            <label>Current password</label>
+            <input type="password" id="s-curpw" placeholder="••••••••">
+          </div>
+          <div class="form-row">
+            <div class="form-field" style="margin:0">
+              <label>New password</label>
+              <input type="password" id="s-newpw" placeholder="••••••••">
+            </div>
+            <div class="form-field" style="margin:0">
+              <label>Confirm new password</label>
+              <input type="password" id="s-cfpw" placeholder="••••••••">
+            </div>
+          </div>
+          <button class="btn" onclick="changePassword()" style="align-self:flex-start">Update password</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-head">
+          <div class="settings-section-title">Data</div>
+          <div class="settings-section-sub">Export or reset your team data</div>
+        </div>
+        <div class="settings-section-body" style="flex-direction:row;flex-wrap:wrap;gap:10px;">
+          <button class="btn" onclick="exportAll()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Export all data (JSON)
+          </button>
+          <button class="btn btn-danger" onclick="resetData()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+            Reset all data
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /admin-screen -->
+
+<!-- ══════════════ PUBLIC PAGE ══════════════ -->
+<div id="pub-page">
+  <div class="pub-topbar" id="pub-topbar">
+    <div class="pub-brand" id="pub-brand-name">TeamSquad</div>
+    <nav class="pub-nav"><a class="active">Team</a><a>Fixtures</a><a>About</a></nav>
+    <button class="pub-close-bar" onclick="closePublicPage()">✕ Close preview</button>
+  </div>
+  <div class="pub-hero" id="pub-hero">
+    <div class="pub-eyebrow" id="pub-eyebrow">Official Roster</div>
+    <div class="pub-heading" id="pub-heading">Our Squad</div>
+    <div class="pub-sub" id="pub-sub">Meet the players and staff who make this club great.</div>
+  </div>
+  <div class="pub-section">
+    <div class="pub-section-title">Players <span id="pub-player-count"></span></div>
+    <div class="pub-grid" id="pub-players-grid"></div>
+  </div>
+  <div class="pub-section">
+    <div class="pub-section-title">Coaching Staff</div>
+    <div class="pub-grid" id="pub-coaches-grid"></div>
+  </div>
+  <div class="pub-section" id="pub-fixtures-section">
+    <div class="pub-section-title">Upcoming Fixtures</div>
+    <div id="pub-fixtures-list"></div>
+  </div>
+  <div style="height:60px"></div>
+</div>
+
+<!-- ══════════════ MEMBER MODAL ══════════════ -->
+<div class="modal-backdrop" id="modal-backdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="modal-title">Add Member</div>
+      <button class="btn btn-sm btn-icon" onclick="closeModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="photo-upload-area" onclick="document.getElementById('photo-file').click()">
+        <img id="photo-preview" class="photo-preview-circle" src="" alt="" style="display:none">
+        <div id="upload-placeholder">
+          <div class="upload-icon">📷</div>
+          <div class="upload-label">Click to upload photo</div>
+          <div class="upload-sub">JPG, PNG or WebP</div>
+        </div>
+        <input type="file" id="photo-file" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)">
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label>First name *</label><input type="text" id="f-fname" placeholder="Brian"></div>
+        <div class="form-field"><label>Last name</label><input type="text" id="f-lname" placeholder="Otieno"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Role</label>
+          <select id="f-role">
+            <option value="player">Player</option>
+            <option value="coach">Coach</option>
+            <option value="staff">Staff</option>
+          </select>
+        </div>
+        <div class="form-field"><label>Jersey number</label><input type="text" id="f-number" placeholder="#10"></div>
+      </div>
+      <div class="form-field"><label>Position / Title *</label><input type="text" id="f-position" placeholder="Midfielder, Head Coach…"></div>
+      <div class="form-row">
+        <div class="form-field"><label>Nationality</label><input type="text" id="f-nationality" placeholder="Kenyan"></div>
+        <div class="form-field"><label>Date of birth</label><input type="date" id="f-dob"></div>
+      </div>
+      <div class="form-field"><label>Bio (optional)</label><textarea id="f-bio" rows="2" placeholder="Short description…" style="resize:vertical;min-height:58px"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger btn-sm" id="delete-btn" style="display:none;margin-right:auto" onclick="deleteMember()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+        Delete
+      </button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveMember()" id="save-btn">Add member</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ FIXTURE MODAL ══════════════ -->
+<div class="modal-backdrop" id="fixture-modal-backdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="fx-modal-title">Add Fixture</div>
+      <button class="btn btn-sm btn-icon" onclick="closeFixtureModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-field"><label>Home team *</label><input type="text" id="fx-home" placeholder="Our Team"></div>
+        <div class="form-field"><label>Away team *</label><input type="text" id="fx-away" placeholder="Opponent FC"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label>Date *</label><input type="date" id="fx-date"></div>
+        <div class="form-field"><label>Kick-off time</label><input type="time" id="fx-time" value="15:00"></div>
+      </div>
+      <div class="form-field"><label>Venue</label><input type="text" id="fx-venue" placeholder="Nyayo Stadium, Nairobi"></div>
+      <div class="form-field">
+        <label>Status</label>
+        <select id="fx-status">
+          <option value="upcoming">Upcoming</option>
+          <option value="played">Played</option>
+          <option value="live">Live</option>
+        </select>
+      </div>
+      <div class="form-row" id="score-row" style="display:none">
+        <div class="form-field"><label>Home score</label><input type="number" id="fx-hscore" min="0" value="0"></div>
+        <div class="form-field"><label>Away score</label><input type="number" id="fx-ascore" min="0" value="0"></div>
+      </div>
+      <div class="form-field"><label>Notes</label><input type="text" id="fx-notes" placeholder="Cup match, derby…"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger btn-sm" id="fx-delete-btn" style="display:none;margin-right:auto" onclick="deleteFixture()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+        Delete
+      </button>
+      <button class="btn" onclick="closeFixtureModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveFixture()" id="fx-save-btn">Add fixture</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <svg style="width:13px;height:13px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toast-msg">Saved!</span>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════
+let members = JSON.parse(localStorage.getItem('ta_members') || 'null') || [
+  {id:1,fname:'Brian',lname:'Otieno',role:'player',position:'Striker',number:'#9',nationality:'Kenyan',dob:'',bio:'',photo:null},
+  {id:2,fname:'Faith',lname:'Wanjiru',role:'player',position:'Goalkeeper',number:'#1',nationality:'Kenyan',dob:'',bio:'',photo:null},
+  {id:3,fname:'Aisha',lname:'Mohamed',role:'player',position:'Midfielder',number:'#8',nationality:'Kenyan',dob:'',bio:'',photo:null},
+  {id:4,fname:'Kevin',lname:'Njoroge',role:'player',position:'Defender',number:'#4',nationality:'Kenyan',dob:'',bio:'',photo:null},
+  {id:5,fname:'David',lname:'Kamau',role:'player',position:'Winger',number:'#11',nationality:'Kenyan',dob:'',bio:'',photo:null},
+  {id:6,fname:'James',lname:'Mwangi',role:'coach',position:'Head Coach',number:'',nationality:'Kenyan',dob:'',bio:'UEFA B licensed with 10 years experience.',photo:null},
+  {id:7,fname:'Lucy',lname:'Karanja',role:'coach',position:'Assistant Coach',number:'',nationality:'Kenyan',dob:'',bio:'',photo:null},
+  {id:8,fname:'Peter',lname:'Odhiambo',role:'staff',position:'Physiotherapist',number:'',nationality:'Kenyan',dob:'',bio:'',photo:null},
+];
+
+let fixtures = JSON.parse(localStorage.getItem('ta_fixtures') || 'null') || [
+  {id:1,home:'Our Team',away:'Tusker FC',date:'2025-07-12',time:'15:00',venue:'Nyayo Stadium',status:'upcoming',hscore:0,ascore:0,notes:'League match'},
+  {id:2,home:'Gor Mahia',away:'Our Team',date:'2025-06-28',time:'16:00',venue:'Kasarani',status:'played',hscore:1,ascore:2,notes:'Away win'},
+  {id:3,home:'Our Team',away:'AFC Leopards',date:'2025-08-03',time:'15:00',venue:'Home Ground',status:'upcoming',hscore:0,ascore:0,notes:'Derby'},
+];
+
+let settings = JSON.parse(localStorage.getItem('ta_settings') || 'null') || {
+  teamName:'Nairobi FC', founded:'2005', stadium:'Nyayo Stadium',
+  tagline:'Pride of the Nation', accent:'#2f81f7', logo:null
+};
+
+let passwords = JSON.parse(localStorage.getItem('ta_passwords') || 'null') || {admin:'admin123',manager:'team2024'};
+
+let editingId = null, editingFixtureId = null;
+let tempPhoto = null, currentFilters = {squad:'all',coaches:'all'}, currentSearch = {squad:'',coaches:''};
+let fixtureFilter = 'all';
+
+function saveData() {
+  localStorage.setItem('ta_members', JSON.stringify(members));
+  localStorage.setItem('ta_fixtures', JSON.stringify(fixtures));
+  localStorage.setItem('ta_settings', JSON.stringify(settings));
+  localStorage.setItem('ta_passwords', JSON.stringify(passwords));
+}
+
+// ══════════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════════
+function doLogin() {
+  const u = document.getElementById('l-user').value.trim();
+  const p = document.getElementById('l-pass').value;
+  if (passwords[u] && passwords[u] === p) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('admin-screen').style.display = 'flex';
+    document.getElementById('admin-screen').style.flexDirection = 'column';
+    document.getElementById('user-label').textContent = u;
+    document.getElementById('user-avatar').textContent = u.slice(0,2).toUpperCase();
+    applySettings(); renderAll(); renderDashboard(); renderFixtures();
+    const h = new Date().getHours();
+    document.getElementById('dash-greeting').textContent = h<12?'Good morning, '+u:h<17?'Good afternoon, '+u:'Good evening, '+u;
+    document.getElementById('dash-date').textContent = new Date().toLocaleDateString('en-KE',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  } else {
+    document.getElementById('login-error').style.display = 'block';
+  }
+}
+function doLogout() {
+  document.getElementById('admin-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+// ══════════════════════════════════════════
+//  PAGES
+// ══════════════════════════════════════════
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.getElementById('tab-'+id).classList.add('active');
+  if(id==='dashboard') renderDashboard();
+  if(id==='squad'||id==='coaches') renderAll();
+  if(id==='fixtures') renderFixtures();
+  if(id==='settings') loadSettingsForm();
+}
+
+// ══════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════
+function posGroup(pos){
+  pos=(pos||'').toLowerCase();
+  if(pos.includes('goalkeeper')||pos.includes('keeper')||pos.includes('goalie')) return 'goalkeeper';
+  if(pos.includes('defender')||pos.includes('back')||pos.includes('centre-back')) return 'defender';
+  if(pos.includes('midfielder')||pos.includes('mid')) return 'midfielder';
+  if(pos.includes('forward')||pos.includes('striker')||pos.includes('winger')||pos.includes('attacker')) return 'forward';
+  return 'other';
+}
+const roleEmoji={player:'⚽',coach:'📋',staff:'🔧'};
+
+function calcAge(dob){
+  if(!dob) return null;
+  const d=new Date(dob), now=new Date();
+  let age=now.getFullYear()-d.getFullYear();
+  const m=now.getMonth()-d.getMonth();
+  if(m<0||(m===0&&now.getDate()<d.getDate())) age--;
+  return age>0?age:null;
+}
+
+// ══════════════════════════════════════════
+//  DASHBOARD
+// ══════════════════════════════════════════
+function renderDashboard(){
+  const players=members.filter(m=>m.role==='player');
+  const coaches=members.filter(m=>m.role==='coach'||m.role==='staff');
+  const upcoming=fixtures.filter(f=>f.status==='upcoming').length;
+  const played=fixtures.filter(f=>f.status==='played');
+  const wins=played.filter(f=>{
+    const isHome=f.home.toLowerCase().includes('our')||f.home===settings.teamName;
+    return isHome?f.hscore>f.ascore:f.ascore>f.hscore;
+  }).length;
+
+  document.getElementById('dash-stats-grid').innerHTML=`
+    <div class="dash-stat"><div class="dash-stat-ico">⚽</div><div class="dash-stat-val" style="color:var(--accent)">${players.length}</div><div class="dash-stat-label">Players</div></div>
+    <div class="dash-stat"><div class="dash-stat-ico">📋</div><div class="dash-stat-val" style="color:var(--green)">${coaches.length}</div><div class="dash-stat-label">Coaches & Staff</div></div>
+    <div class="dash-stat"><div class="dash-stat-ico">📅</div><div class="dash-stat-val" style="color:var(--orange)">${upcoming}</div><div class="dash-stat-label">Upcoming Fixtures</div></div>
+    <div class="dash-stat"><div class="dash-stat-ico">🏆</div><div class="dash-stat-val" style="color:var(--purple)">${wins}</div><div class="dash-stat-label">Wins recorded</div></div>
+  `;
+
+  const recentFx=[...fixtures].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,4);
+  const recentMembers=[...members].slice(-4).reverse();
+
+  document.getElementById('dash-two').innerHTML=`
+    <div class="dash-panel">
+      <div class="dash-panel-head"><div class="dash-panel-title">Recent members</div><button class="btn btn-sm" onclick="showPage('squad')">View all</button></div>
+      <div class="dash-panel-body">
+        ${recentMembers.length?recentMembers.map(m=>`
+          <div class="dash-row">
+            <div class="dash-avatar">${m.photo?`<img src="${m.photo}" alt="">`:(roleEmoji[m.role]||'👤')}</div>
+            <div><div class="dash-row-name">${m.fname} ${m.lname}</div><div class="dash-row-sub">${m.position}</div></div>
+            <span class="tag badge-${m.role}" style="margin-left:auto">${m.role}</span>
+          </div>`).join(''):'<div class="dash-empty">No members yet.</div>'}
+      </div>
+    </div>
+    <div class="dash-panel">
+      <div class="dash-panel-head"><div class="dash-panel-title">Fixtures</div><button class="btn btn-sm" onclick="showPage('fixtures')">View all</button></div>
+      <div class="dash-panel-body">
+        ${recentFx.length?recentFx.map(f=>`
+          <div class="dash-row" onclick="showPage('fixtures')" style="cursor:pointer">
+            <div>
+              <div class="dash-row-name">${f.home} vs ${f.away}</div>
+              <div class="dash-row-sub">${f.date}${f.venue?' · '+f.venue:''}</div>
+            </div>
+            <span class="fixture-status status-${f.status}" style="margin-left:auto">${f.status}</span>
+          </div>`).join(''):'<div class="dash-empty">No fixtures yet.</div>'}
+      </div>
+    </div>
+  `;
+}
+
+// ══════════════════════════════════════════
+//  MEMBERS GRID
+// ══════════════════════════════════════════
+function memberHTML(m){
+  const age=calcAge(m.dob);
+  return `<div class="member-card" onclick="openEdit(${m.id})">
+    <div class="card-photo">
+      ${m.photo?`<img src="${m.photo}" alt="${m.fname}">`:`<div class="card-photo-placeholder">${roleEmoji[m.role]}</div>`}
+      <span class="card-badge badge-${m.role}">${m.role}</span>
+      ${m.number?`<span class="card-number">${m.number}</span>`:''}
+    </div>
+    <div class="card-body">
+      <div class="card-name">${m.fname} ${m.lname}</div>
+      <div class="card-pos">${m.position}${age?' · '+age+'y':''}</div>
+      <div class="card-actions">
+        <button class="btn btn-sm" onclick="event.stopPropagation();openEdit(${m.id})">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit
+        </button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderGrid(id, fn){
+  const g=document.getElementById(id);
+  const list=members.filter(fn);
+  g.innerHTML=list.length?list.map(memberHTML).join(''):`<div class="empty-msg">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+    No members found.</div>`;
+}
+
+function renderSquad(){
+  const f=currentFilters.squad, s=currentSearch.squad.toLowerCase();
+  renderGrid('grid-squad',m=>m.role==='player'&&(f==='all'||posGroup(m.position)===f)&&(!s||(m.fname+' '+m.lname+' '+m.position).toLowerCase().includes(s)));
+  const p=members.filter(m=>m.role==='player');
+  document.getElementById('squad-stats').innerHTML=`
+    <div class="stat-block"><div class="stat-label">Total</div><div class="stat-value blue">${p.length}</div></div>
+    <div class="stat-block"><div class="stat-label">Goalkeepers</div><div class="stat-value">${p.filter(m=>posGroup(m.position)==='goalkeeper').length}</div></div>
+    <div class="stat-block"><div class="stat-label">Defenders</div><div class="stat-value">${p.filter(m=>posGroup(m.position)==='defender').length}</div></div>
+    <div class="stat-block"><div class="stat-label">Mid / Fwd</div><div class="stat-value">${p.filter(m=>['midfielder','forward','other'].includes(posGroup(m.position))).length}</div></div>
+  `;
+}
+
+function renderCoaches(){
+  const s=currentSearch.coaches.toLowerCase();
+  renderGrid('grid-coaches',m=>m.role!=='player'&&(!s||(m.fname+' '+m.lname+' '+m.position).toLowerCase().includes(s)));
+  const st=members.filter(m=>m.role!=='player');
+  document.getElementById('coach-stats').innerHTML=`
+    <div class="stat-block"><div class="stat-label">Total staff</div><div class="stat-value blue">${st.length}</div></div>
+    <div class="stat-block"><div class="stat-label">Coaches</div><div class="stat-value green">${st.filter(m=>m.role==='coach').length}</div></div>
+    <div class="stat-block"><div class="stat-label">Support</div><div class="stat-value orange">${st.filter(m=>m.role==='staff').length}</div></div>
+    <div class="stat-block"><div class="stat-label">All members</div><div class="stat-value">${members.length}</div></div>
+  `;
+}
+
+function renderAll(){ renderSquad(); renderCoaches(); }
+
+function filterMembers(f,section){
+  currentFilters[section]=f;
+  document.querySelectorAll(`[id^="fp-${section}-"]`).forEach(e=>e.classList.remove('active'));
+  const el=document.getElementById(`fp-${section}-${f}`);
+  if(el) el.classList.add('active');
+  renderAll();
+}
+function searchMembers(v,section){ currentSearch[section]=v; renderAll(); }
+
+// ══════════════════════════════════════════
+//  FIXTURES
+// ══════════════════════════════════════════
+function renderFixtures(){
+  const list=fixtureFilter==='all'?fixtures:fixtures.filter(f=>f.status===fixtureFilter);
+  const sorted=[...list].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const played=fixtures.filter(f=>f.status==='played');
+  const upcoming=fixtures.filter(f=>f.status==='upcoming');
+  const wins=played.filter(f=>{const h=f.home===settings.teamName||f.home.toLowerCase().includes('our');return h?f.hscore>f.ascore:f.ascore>f.hscore;});
+  document.getElementById('fixture-stats').innerHTML=`
+    <div class="stat-block"><div class="stat-label">Total</div><div class="stat-value blue">${fixtures.length}</div></div>
+    <div class="stat-block"><div class="stat-label">Upcoming</div><div class="stat-value orange">${upcoming.length}</div></div>
+    <div class="stat-block"><div class="stat-label">Played</div><div class="stat-value">${played.length}</div></div>
+    <div class="stat-block"><div class="stat-label">Wins</div><div class="stat-value green">${wins.length}</div></div>
+  `;
+  const el=document.getElementById('fixtures-list');
+  if(!sorted.length){el.innerHTML='<div style="text-align:center;padding:48px;color:var(--text3);font-size:13px">No fixtures found. Add one above.</div>';return;}
+  el.innerHTML=sorted.map(f=>`
+    <div class="fixture-card" onclick="openFixtureModal(${f.id})">
+      <div class="fixture-team fixture-team-home">
+        <div class="fixture-team-name">${f.home}</div>
+        <div class="fixture-venue">${f.venue||''}</div>
+      </div>
+      <div class="fixture-center">
+        ${f.status==='played'?`<div class="fixture-score">${f.hscore} – ${f.ascore}</div>`:`<div class="fixture-vs">vs</div>`}
+        <div class="fixture-date">${new Date(f.date+'T00:00').toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'})} ${f.time?'· '+f.time:''}</div>
+        <span class="fixture-status status-${f.status}">${f.status}</span>
+      </div>
+      <div class="fixture-team" style="text-align:right">
+        <div class="fixture-team-name">${f.away}</div>
+        <div class="fixture-venue">${f.notes||''}</div>
+      </div>
+    </div>`).join('');
+}
+
+function filterFixtures(f){
+  fixtureFilter=f;
+  ['all','upcoming','played'].forEach(x=>document.getElementById('ff-'+x).classList.toggle('active',x===f));
+  renderFixtures();
+}
+
+function openFixtureModal(id){
+  editingFixtureId=id||null;
+  if(id){
+    const f=fixtures.find(x=>x.id===id); if(!f) return;
+    document.getElementById('fx-modal-title').textContent='Edit Fixture';
+    document.getElementById('fx-save-btn').textContent='Save changes';
+    document.getElementById('fx-delete-btn').style.display='inline-flex';
+    document.getElementById('fx-home').value=f.home;
+    document.getElementById('fx-away').value=f.away;
+    document.getElementById('fx-date').value=f.date;
+    document.getElementById('fx-time').value=f.time||'';
+    document.getElementById('fx-venue').value=f.venue||'';
+    document.getElementById('fx-status').value=f.status;
+    document.getElementById('fx-hscore').value=f.hscore;
+    document.getElementById('fx-ascore').value=f.ascore;
+    document.getElementById('fx-notes').value=f.notes||'';
+  } else {
+    document.getElementById('fx-modal-title').textContent='Add Fixture';
+    document.getElementById('fx-save-btn').textContent='Add fixture';
+    document.getElementById('fx-delete-btn').style.display='none';
+    ['fx-home','fx-away','fx-venue','fx-notes'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('fx-home').value=settings.teamName||'Our Team';
+    document.getElementById('fx-date').value=new Date().toISOString().split('T')[0];
+    document.getElementById('fx-time').value='15:00';
+    document.getElementById('fx-status').value='upcoming';
+    document.getElementById('fx-hscore').value='0';
+    document.getElementById('fx-ascore').value='0';
+  }
+  toggleScoreRow();
+  document.getElementById('fixture-modal-backdrop').classList.add('open');
+}
+function toggleScoreRow(){
+  document.getElementById('score-row').style.display=document.getElementById('fx-status').value==='played'?'grid':'none';
+}
+document.addEventListener('change',e=>{if(e.target.id==='fx-status')toggleScoreRow();});
+
+function closeFixtureModal(){ document.getElementById('fixture-modal-backdrop').classList.remove('open'); }
+
+function saveFixture(){
+  const home=document.getElementById('fx-home').value.trim();
+  const away=document.getElementById('fx-away').value.trim();
+  const date=document.getElementById('fx-date').value;
+  if(!home||!away||!date){showToast('Fill in required fields.',true);return;}
+  const data={home,away,date,time:document.getElementById('fx-time').value,venue:document.getElementById('fx-venue').value.trim(),status:document.getElementById('fx-status').value,hscore:parseInt(document.getElementById('fx-hscore').value)||0,ascore:parseInt(document.getElementById('fx-ascore').value)||0,notes:document.getElementById('fx-notes').value.trim()};
+  if(editingFixtureId){
+    const i=fixtures.findIndex(f=>f.id===editingFixtureId);
+    fixtures[i]={...fixtures[i],...data};
+    showToast('Fixture updated!');
+  } else {
+    fixtures.push({id:Date.now(),...data});
+    showToast('Fixture added!');
+  }
+  saveData(); closeFixtureModal(); renderFixtures(); renderDashboard();
+}
+function deleteFixture(){
+  if(!editingFixtureId) return;
+  const f=fixtures.find(x=>x.id===editingFixtureId);
+  if(!confirm(`Delete fixture: ${f.home} vs ${f.away}?`)) return;
+  fixtures=fixtures.filter(x=>x.id!==editingFixtureId);
+  saveData(); closeFixtureModal(); renderFixtures(); renderDashboard();
+  showToast('Fixture deleted.');
+}
+
+// ══════════════════════════════════════════
+//  MEMBER MODAL
+// ══════════════════════════════════════════
+function openModal(defaultRole){
+  editingId=null; tempPhoto=null;
+  document.getElementById('modal-title').textContent='Add Member';
+  document.getElementById('save-btn').textContent='Add member';
+  document.getElementById('delete-btn').style.display='none';
+  ['f-fname','f-lname','f-position','f-number','f-nationality','f-dob','f-bio'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('f-role').value=defaultRole||'player';
+  document.getElementById('photo-preview').style.display='none';
+  document.getElementById('upload-placeholder').style.display='block';
+  document.getElementById('modal-backdrop').classList.add('open');
+  setTimeout(()=>document.getElementById('f-fname').focus(),80);
+}
+function openEdit(id){
+  const m=members.find(x=>x.id===id); if(!m) return;
+  editingId=id; tempPhoto=m.photo;
+  document.getElementById('modal-title').textContent='Edit Member';
+  document.getElementById('save-btn').textContent='Save changes';
+  document.getElementById('delete-btn').style.display='inline-flex';
+  document.getElementById('f-fname').value=m.fname;
+  document.getElementById('f-lname').value=m.lname;
+  document.getElementById('f-role').value=m.role;
+  document.getElementById('f-position').value=m.position;
+  document.getElementById('f-number').value=m.number||'';
+  document.getElementById('f-nationality').value=m.nationality||'';
+  document.getElementById('f-dob').value=m.dob||'';
+  document.getElementById('f-bio').value=m.bio||'';
+  if(m.photo){
+    document.getElementById('photo-preview').src=m.photo;
+    document.getElementById('photo-preview').style.display='block';
+    document.getElementById('upload-placeholder').style.display='none';
+  } else {
+    document.getElementById('photo-preview').style.display='none';
+    document.getElementById('upload-placeholder').style.display='block';
+  }
+  document.getElementById('modal-backdrop').classList.add('open');
+}
+function closeModal(){ document.getElementById('modal-backdrop').classList.remove('open'); }
+function handlePhotoUpload(e){
+  const file=e.target.files[0]; if(!file) return;
+  const r=new FileReader();
+  r.onload=ev=>{tempPhoto=ev.target.result;document.getElementById('photo-preview').src=tempPhoto;document.getElementById('photo-preview').style.display='block';document.getElementById('upload-placeholder').style.display='none';};
+  r.readAsDataURL(file);
+}
+function saveMember(){
+  const fname=document.getElementById('f-fname').value.trim();
+  const pos=document.getElementById('f-position').value.trim();
+  if(!fname||!pos){showToast('Name and position are required.',true);return;}
+  const data={fname,lname:document.getElementById('f-lname').value.trim(),role:document.getElementById('f-role').value,position:pos,number:document.getElementById('f-number').value.trim(),nationality:document.getElementById('f-nationality').value.trim(),dob:document.getElementById('f-dob').value,bio:document.getElementById('f-bio').value.trim(),photo:tempPhoto};
+  if(editingId){const i=members.findIndex(m=>m.id===editingId);members[i]={...members[i],...data};showToast('Changes saved!');}
+  else{members.push({id:Date.now(),...data});showToast('Member added!');}
+  saveData(); closeModal(); renderAll(); renderDashboard();
+}
+function deleteMember(){
+  if(!editingId) return;
+  const m=members.find(x=>x.id===editingId);
+  if(!confirm(`Remove ${m.fname} ${m.lname}?`)) return;
+  members=members.filter(x=>x.id!==editingId);
+  saveData(); closeModal(); renderAll(); renderDashboard(); showToast('Member removed.');
+}
+
+// ══════════════════════════════════════════
+//  PUBLIC PAGE
+// ══════════════════════════════════════════
+const ACCENTS=['#2f81f7','#e05252','#3fb950','#d29922','#bc8cff','#f78166','#56d364','#58a6ff'];
+
+function applySettings(){
+  document.getElementById('nav-team-name').textContent=settings.teamName?'· '+settings.teamName:'';
+  document.title=(settings.teamName||'TeamAdmin')+' — Squad Manager';
+}
+
+function openPublicPage(){
+  const acc=settings.accent||'#2f81f7';
+  const players=members.filter(m=>m.role==='player');
+  const staff=members.filter(m=>m.role!=='player');
+  const upcomingFx=fixtures.filter(f=>f.status==='upcoming').sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(0,3);
+
+  document.getElementById('pub-topbar').style.background=acc+'22';
+  document.getElementById('pub-page').style.background='#060a0f';
+  document.getElementById('pub-hero').style.setProperty('--acc',acc);
+  document.querySelector('#pub-hero::before');
+
+  document.getElementById('pub-brand-name').textContent=settings.teamName||'TeamSquad';
+  document.getElementById('pub-brand-name').style.color='#fff';
+  document.getElementById('pub-eyebrow').style.color=acc;
+  document.getElementById('pub-heading').textContent=(settings.teamName||'Our Squad');
+  document.getElementById('pub-sub').textContent=settings.tagline||'Meet the players and staff who make this club great.';
+
+  const cardFn=m=>`<div class="pub-card">
+    <div class="pub-photo" style="background:rgba(255,255,255,0.04)">${m.photo?`<img src="${m.photo}" alt="${m.fname}">`:(roleEmoji[m.role]||'👤')}</div>
+    <div class="pub-info">
+      <div class="pub-name">${m.fname} ${m.lname}</div>
+      <div class="pub-pos">${m.position}${m.nationality?' · '+m.nationality:''}</div>
+      ${m.number?`<div class="pub-num" style="color:${acc}">${m.number}</div>`:''}
+    </div>
+  </div>`;
+
+  document.getElementById('pub-player-count').textContent='('+players.length+')';
+  document.getElementById('pub-players-grid').innerHTML=players.map(cardFn).join('')||'<p style="color:rgba(255,255,255,0.25);font-size:13px">No players added yet.</p>';
+  document.getElementById('pub-coaches-grid').innerHTML=staff.map(cardFn).join('')||'<p style="color:rgba(255,255,255,0.25);font-size:13px">No staff added yet.</p>';
+
+  const fxEl=document.getElementById('pub-fixtures-list');
+  if(upcomingFx.length){
+    document.getElementById('pub-fixtures-section').style.display='block';
+    fxEl.innerHTML=upcomingFx.map(f=>`
+      <div class="pub-fixture">
+        <div style="color:#fff;font-weight:600;font-size:14px">${f.home}</div>
+        <div style="text-align:center">
+          <div style="font-size:11px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px">vs</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.4)">${new Date(f.date+'T00:00').toLocaleDateString('en-KE',{day:'numeric',month:'short'})} · ${f.time}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.25)">${f.venue||''}</div>
+        </div>
+        <div style="color:#fff;font-weight:600;font-size:14px;text-align:right">${f.away}</div>
+      </div>`).join('');
+  } else {
+    document.getElementById('pub-fixtures-section').style.display='none';
+  }
+  document.getElementById('pub-page').classList.add('open');
+}
+function closePublicPage(){ document.getElementById('pub-page').classList.remove('open'); }
+
+// ══════════════════════════════════════════
+//  SETTINGS
+// ══════════════════════════════════════════
+function loadSettingsForm(){
+  document.getElementById('s-teamname').value=settings.teamName||'';
+  document.getElementById('s-founded').value=settings.founded||'';
+  document.getElementById('s-stadium').value=settings.stadium||'';
+  document.getElementById('s-tagline').value=settings.tagline||'';
+  if(settings.logo){document.getElementById('logo-preview').src=settings.logo;document.getElementById('logo-preview').style.display='block';document.getElementById('logo-placeholder').style.display='none';}
+  else{document.getElementById('logo-preview').style.display='none';document.getElementById('logo-placeholder').style.display='block';}
+  const sw=document.getElementById('color-swatches');
+  sw.innerHTML=ACCENTS.map(c=>`<div class="color-swatch${settings.accent===c?' selected':''}" style="background:${c}" onclick="selectAccent('${c}')" title="${c}"></div>`).join('');
+}
+function selectAccent(c){
+  settings.accent=c;
+  document.querySelectorAll('.color-swatch').forEach(s=>s.classList.toggle('selected',s.title===c));
+}
+function handleLogoUpload(e){
+  const file=e.target.files[0]; if(!file) return;
+  const r=new FileReader();
+  r.onload=ev=>{settings.logo=ev.target.result;document.getElementById('logo-preview').src=settings.logo;document.getElementById('logo-preview').style.display='block';document.getElementById('logo-placeholder').style.display='none';};
+  r.readAsDataURL(file);
+}
+function saveSettings(){
+  settings.teamName=document.getElementById('s-teamname').value.trim();
+  settings.founded=document.getElementById('s-founded').value.trim();
+  settings.stadium=document.getElementById('s-stadium').value.trim();
+  settings.tagline=document.getElementById('s-tagline').value.trim();
+  saveData(); applySettings(); showToast('Team profile saved!');
+}
+function changePassword(){
+  const cur=document.getElementById('s-curpw').value;
+  const np=document.getElementById('s-newpw').value;
+  const cf=document.getElementById('s-cfpw').value;
+  const user=document.getElementById('user-label').textContent;
+  if(passwords[user]!==cur){showToast('Current password is incorrect.',true);return;}
+  if(np.length<6){showToast('New password must be 6+ characters.',true);return;}
+  if(np!==cf){showToast('Passwords do not match.',true);return;}
+  passwords[user]=np;
+  saveData(); showToast('Password updated!');
+  ['s-curpw','s-newpw','s-cfpw'].forEach(i=>document.getElementById(i).value='');
+}
+
+// ══════════════════════════════════════════
+//  EXPORT
+// ══════════════════════════════════════════
+function exportCSV(role){
+  const list=role==='player'?members.filter(m=>m.role==='player'):members.filter(m=>m.role!=='player');
+  const rows=[['First Name','Last Name','Role','Position','Number','Nationality','DOB'],...list.map(m=>[m.fname,m.lname,m.role,m.position,m.number,m.nationality,m.dob])];
+  const csv=rows.map(r=>r.map(v=>'"'+(v||'').replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=(settings.teamName||'team')+'-'+role+'s.csv';
+  a.click();
+  showToast('CSV exported!');
+}
+function exportAll(){
+  const data=JSON.stringify({members,fixtures,settings:({...settings,logo:'[removed for size]'})},null,2);
+  const a=document.createElement('a');
+  a.href='data:application/json;charset=utf-8,'+encodeURIComponent(data);
+  a.download=(settings.teamName||'team')+'-data.json';
+  a.click();
+  showToast('Data exported!');
+}
+function resetData(){
+  if(!confirm('Reset ALL data? This cannot be undone.')) return;
+  localStorage.clear();
+  location.reload();
+}
+
+// ══════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════
+let toastTimer;
+function showToast(msg,error){
+  clearTimeout(toastTimer);
+  const t=document.getElementById('toast');
+  document.getElementById('toast-msg').textContent=msg;
+  t.style.borderColor=error?'var(--red)':'var(--green)';
+  t.style.color=error?'var(--red)':'var(--green)';
+  t.classList.add('show');
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+// close modals on backdrop click
+document.getElementById('modal-backdrop').addEventListener('click',function(e){if(e.target===this)closeModal();});
+document.getElementById('fixture-modal-backdrop').addEventListener('click',function(e){if(e.target===this)closeFixtureModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeFixtureModal();closePublicPage();}});
+</script>
+</body>
+</html>
